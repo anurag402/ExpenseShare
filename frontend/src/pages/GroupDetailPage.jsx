@@ -9,6 +9,7 @@ import {
   FaUserMinus,
   FaBalanceScaleRight,
   FaSearch,
+  FaMoneyBillWave,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 import ExpenseForm from "../components/ExpenseForm";

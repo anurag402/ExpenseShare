@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3000/api";
+const API_URL = "https://expenseshare-0sjl.onrender.com/api";
 
 // Helper: handle auth errors
 const handleAuthError = (response) => {
