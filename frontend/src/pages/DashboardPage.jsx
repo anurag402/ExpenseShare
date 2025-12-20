@@ -53,11 +53,10 @@ export default function DashboardPage({ currentUser, users }) {
         api.getUserBalances(currentUser),
       ]);
       // Sort groups alphabetically
-      const sortedGroups = (groupsData || []).sort((a, b) => 
+      const sortedGroups = (groupsData || []).sort((a, b) =>
         a.name.localeCompare(b.name)
       );
       setGroups(sortedGroups);
-      console.log("User balances data:", balancesData);
       setUserBalances(balancesData);
 
       // Load settled expenses separately with error handling
@@ -75,11 +74,13 @@ export default function DashboardPage({ currentUser, users }) {
           try {
             const groupExpenses = await api.getGroupExpenses(group.id);
             // Add group name and id to each expense
-            const expensesWithGroupName = (groupExpenses || []).map(expense => ({
-              ...expense,
-              groupName: group.name,
-              groupId: group.id
-            }));
+            const expensesWithGroupName = (groupExpenses || []).map(
+              (expense) => ({
+                ...expense,
+                groupName: group.name,
+                groupId: group.id,
+              })
+            );
             allExpenses.push(...expensesWithGroupName);
           } catch (expError) {
             console.warn(
@@ -90,7 +91,10 @@ export default function DashboardPage({ currentUser, users }) {
           }
         }
         // Sort by date (newest first) and show only 5 most recent
-        allExpenses.sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date));
+        allExpenses.sort(
+          (a, b) =>
+            new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date)
+        );
         setExpenses(allExpenses.slice(0, 5));
       }
     } catch (error) {
@@ -118,7 +122,7 @@ export default function DashboardPage({ currentUser, users }) {
   if (userBalances?.owed) {
     userBalances.owed.sort((a, b) => b.amount - a.amount);
   }
-  
+
   const totalOwed = userBalances?.totalOwed || 0;
   const totalToPay = userBalances?.totalToPay || 0;
 
@@ -253,12 +257,18 @@ export default function DashboardPage({ currentUser, users }) {
                   <FaArrowDown className="text-green-400" />
                   People Who Owe You
                 </h2>
-                <div className="space-y-3 max-h-[400px] px-2 overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <div
+                  className="space-y-3 max-h-[400px] px-2 overflow-y-auto scrollbar-hide"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                >
                   {userBalances.owed.map((balance, idx) => (
                     <motion.div
                       key={idx}
                       whileHover={{ scale: 1.015 }}
-                      onClick={() => balance.groupId && navigate(`/groups/${balance.groupId}`)}
+                      onClick={() =>
+                        balance.groupId &&
+                        navigate(`/groups/${balance.groupId}`)
+                      }
                       className="p-4 rounded-lg bg-green-500/10 border border-green-500/20 cursor-pointer"
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -296,12 +306,18 @@ export default function DashboardPage({ currentUser, users }) {
                   <FaArrowUp className="text-red-400" />
                   People You Owe
                 </h2>
-                <div className="space-y-3 max-h-[400px] px-2 overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                <div
+                  className="space-y-3 max-h-[400px] px-2 overflow-y-auto scrollbar-hide"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                >
                   {userBalances.owes.map((balance, idx) => (
                     <motion.div
                       key={idx}
                       whileHover={{ scale: 1.02 }}
-                      onClick={() => balance.groupId && navigate(`/groups/${balance.groupId}`)}
+                      onClick={() =>
+                        balance.groupId &&
+                        navigate(`/groups/${balance.groupId}`)
+                      }
                       className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 cursor-pointer"
                     >
                       <div className="flex items-center justify-between mb-2">
@@ -354,11 +370,14 @@ export default function DashboardPage({ currentUser, users }) {
           </div>
 
           {groups.length > 0 ? (
-            <div className="space-y-3 max-h-[400px] px-2 overflow-y-auto overflow-x-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <div
+              className="space-y-3 max-h-[400px] px-2 overflow-y-auto overflow-x-auto scrollbar-hide"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
               {groups.map((group) => (
                 <motion.div
                   key={group.id}
-                  whileHover={{ x: 5}}
+                  whileHover={{ x: 5 }}
                   className="p-5 rounded-lg bg-white/5 border border-white/10 hover:border-white/20"
                 >
                   <Link to={`/groups/${group.id}`} className="block">
@@ -463,35 +482,45 @@ export default function DashboardPage({ currentUser, users }) {
                 <FaClock /> Recent Activity
               </h2>
 
-              <div className="space-y-3 max-h-[500px] px-2 overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <div
+                className="space-y-3 max-h-[500px] px-2 overflow-y-auto scrollbar-hide"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              >
                 {expenses.map((expense) => {
                   const isYourExpense = expense.paidBy === currentUser;
-                  
+
                   // Calculate user's balance for this expense
-                  const userSplit = expense.splits?.find(s => s.userId === currentUser);
+                  const userSplit = expense.splits?.find(
+                    (s) => s.userId === currentUser
+                  );
                   const userSplitAmount = userSplit ? userSplit.amount : 0;
-                  
+
                   let userBalance = 0;
                   let balanceColor = "text-gray-400";
                   let balanceText = "";
-                  
+
                   if (isYourExpense) {
                     // User paid, so they are owed (total - their split)
                     userBalance = expense.amount - userSplitAmount;
-                    balanceColor = userBalance > 0 ? "text-green-400" : "text-gray-400";
+                    balanceColor =
+                      userBalance > 0 ? "text-green-400" : "text-gray-400";
                     balanceText = userBalance > 0 ? "You are owed" : "";
                   } else {
                     // User didn't pay, so they owe their split
                     userBalance = -userSplitAmount;
-                    balanceColor = userBalance < 0 ? "text-red-400" : "text-gray-400";
+                    balanceColor =
+                      userBalance < 0 ? "text-red-400" : "text-gray-400";
                     balanceText = userBalance < 0 ? "You owe" : "";
                   }
-                  
+
                   return (
                     <motion.div
                       key={expense.id}
                       whileHover={{ x: 5 }}
-                      onClick={() => expense.groupId && navigate(`/groups/${expense.groupId}`)}
+                      onClick={() =>
+                        expense.groupId &&
+                        navigate(`/groups/${expense.groupId}`)
+                      }
                       className="p-4 rounded-lg bg-white/5 border border-white/10 hover:border-white/20 cursor-pointer"
                     >
                       <div className="flex items-center justify-between">
@@ -500,8 +529,15 @@ export default function DashboardPage({ currentUser, users }) {
                             {expense.description}
                           </h4>
                           <p className="text-sm text-gray-400">
-                            {expense.groupName} • Paid by {expense.paidByName || 'Unknown'} •{" "}
-                            {new Date(expense.createdAt || expense.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                            {expense.groupName} • Paid by{" "}
+                            {expense.paidByName || "Unknown"} •{" "}
+                            {new Date(
+                              expense.createdAt || expense.date
+                            ).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -535,7 +571,10 @@ export default function DashboardPage({ currentUser, users }) {
                 These expenses were fully settled and archived
               </p>
 
-              <div className="space-y-3 max-h-[500px] overflow-y-auto scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <div
+                className="space-y-3 max-h-[500px] overflow-y-auto scrollbar-hide"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              >
                 {settledExpenses.map((expense) => (
                   <motion.div
                     key={expense._id}

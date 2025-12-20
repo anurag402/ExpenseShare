@@ -4,11 +4,6 @@ import { blacklistToken } from "../services/redis.js";
 
 export const register = async (req, res) => {
   try {
-    console.log("Register request received:", {
-      email: req.body.email,
-      name: req.body.name,
-    });
-
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
@@ -26,7 +21,6 @@ export const register = async (req, res) => {
 
     const user = new User({ name, email, password });
     await user.save();
-    console.log("User created successfully:", user._id);
 
     const accessToken = signAccessToken({
       id: user._id,
@@ -47,8 +41,6 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    console.log("Login request received:", { email: req.body.email });
-
     const { email, password } = req.body;
 
     if (!email || !password) {
@@ -71,7 +63,6 @@ export const login = async (req, res) => {
       name: user.name,
     });
 
-    console.log("Login successful for user:", user._id);
     res.status(200).json({
       message: "Login successful",
       token: accessToken,
@@ -86,14 +77,13 @@ export const login = async (req, res) => {
 export const logout = async (req, res) => {
   try {
     const user = req.user;
-    
+
     // Blacklist the current token if jti exists
     if (user.jti) {
       const ttl = getTokenExpirySeconds(user);
       await blacklistToken(user.jti, ttl);
-      console.log(`Token blacklisted for user: ${user.id}`);
     }
-    
+
     res.status(200).json({ message: "Logout successful" });
   } catch (error) {
     console.error("Logout error:", error);

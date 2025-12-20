@@ -57,7 +57,6 @@ export const createGroup = async (req, res) => {
 export const getAllGroups = async (req, res) => {
   try {
     const currentUserId = req.user?.id;
-    console.log("getAllGroups - currentUserId:", currentUserId);
     // Only return groups the authenticated user is part of
     // Use ObjectId for proper MongoDB matching
     const groups = await Group.find({
@@ -65,7 +64,6 @@ export const getAllGroups = async (req, res) => {
     })
       .populate("createdBy", "name email")
       .populate("members", "name email");
-    console.log("getAllGroups - groups found:", groups.length);
     res.json(groups);
   } catch (error) {
     res.status(500).json({ error: error.message });

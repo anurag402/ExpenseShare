@@ -368,7 +368,9 @@ export default function HomePage() {
                 className="p-8 rounded-2xl backdrop-blur-sm bg-white/10 border border-white/20 hover:border-white/40 transition-all"
               >
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="text-4xl">{testimonial.avatar}</div>
+                  <div className="text-4xl">
+                    <testimonial.avatar />
+                  </div>
                   <div>
                     <h4 className="font-bold text-white">{testimonial.name}</h4>
                     <p className="text-sm text-gray-400">{testimonial.role}</p>

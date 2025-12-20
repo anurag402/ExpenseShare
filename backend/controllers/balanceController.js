@@ -292,10 +292,6 @@ async function performSettlement(
   groupId,
   settledBy
 ) {
-  console.log(
-    `\n🔄 Settling balance: ${fromUserId} <-> ${toUserId}, amount: ${amount}, groupId: ${groupId}`
-  );
-
   if (!fromUserId || !toUserId || !amount) {
     throw new Error("fromUserId, toUserId, and amount are required");
   }
@@ -313,7 +309,6 @@ async function performSettlement(
   // Recalculate balances (which will now include the settlement)
   await recalculateGroupBalances(groupId);
 
-  console.log(`Checking if all balances are settled...`);
   await checkAndArchiveSettledExpenses(groupId, settledBy || fromUserId);
 
   const refreshed = await Balance.find({ groupId })
@@ -435,9 +430,6 @@ async function checkAndArchiveSettledExpenses(groupId, settledBy) {
   try {
     const balances = await Balance.find({ groupId });
 
-    console.log(`\n=== Checking settlement for group ${groupId} ===`);
-    console.log(`Found ${balances.length} balance documents`);
-
     // Count total non-zero balances
     let totalNonZeroBalances = 0;
     balances.forEach((doc) => {
@@ -446,23 +438,13 @@ async function checkAndArchiveSettledExpenses(groupId, settledBy) {
           (b) => Math.abs(b.amount) >= 0.01
         );
         totalNonZeroBalances += nonZeroBalances.length;
-        console.log(
-          `User ${doc.userId}: ${nonZeroBalances.length} non-zero balances`
-        );
       }
     });
 
-    console.log(`Total non-zero balances: ${totalNonZeroBalances}`);
-
     // Only archive if there are absolutely no non-zero balances
     if (totalNonZeroBalances === 0) {
-      console.log(
-        "✅ All balances are zero! Archiving expenses and clearing data..."
-      );
-
       // Get all expenses for this group
       const expenses = await Expense.find({ groupId });
-      console.log(`Found ${expenses.length} expenses to archive`);
 
       if (expenses.length > 0) {
         // Archive each expense
@@ -479,22 +461,14 @@ async function checkAndArchiveSettledExpenses(groupId, settledBy) {
 
         // Delete all expenses for this group
         await Expense.deleteMany({ groupId });
-        console.log(`✅ Deleted ${expenses.length} expenses`);
       }
 
       // Clear all balances
       await Balance.deleteMany({ groupId });
-      console.log(`✅ Cleared all balance documents`);
 
       // Clear all settlements for this group
       await Settlement.deleteMany({ groupId });
-      console.log(`✅ Cleared all settlement records`);
-    } else {
-      console.log(
-        `⚠️ Cannot archive: Still ${totalNonZeroBalances} non-zero balances remaining`
-      );
     }
-    console.log("=================================\n");
   } catch (error) {
     console.error("Error in checkAndArchiveSettledExpenses:", error);
     throw error;
