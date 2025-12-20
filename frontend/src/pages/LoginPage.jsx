@@ -2,8 +2,17 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaUser, FaWallet } from "react-icons/fa";
+import {
+  FaEye,
+  FaEyeSlash,
+  FaEnvelope,
+  FaLock,
+  FaUser,
+  FaWallet,
+} from "react-icons/fa";
 import { toast } from "react-toastify";
+
+const API_URL = "https://expenseshare-0sjl.onrender.com/api";
 
 const containerVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -56,9 +65,7 @@ export default function LoginPage({ onLogin }) {
           password: data.password,
         };
 
-    const url = isSignup
-      ? "http://localhost:3000/api/auth/register"
-      : "http://localhost:3000/api/auth/login";
+    const url = `${API_URL}/auth/${isSignup ? "register" : "login"}`;
 
     try {
       const response = await fetch(url, {
@@ -85,9 +92,7 @@ export default function LoginPage({ onLogin }) {
       localStorage.setItem("userId", result.user.id);
 
       toast.success(
-        isSignup
-          ? "Account created successfully!"
-          : "Logged in successfully!"
+        isSignup ? "Account created successfully!" : "Logged in successfully!"
       );
 
       setIsLoading(false);
