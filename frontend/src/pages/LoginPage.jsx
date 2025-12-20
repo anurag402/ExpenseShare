@@ -99,7 +99,6 @@ export default function LoginPage({ onLogin }) {
       onLogin(result.user.id);
       navigate("/");
     } catch (error) {
-      console.error(error);
       toast.error("Server error. Please try again.");
       setIsLoading(false);
     }

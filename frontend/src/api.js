@@ -3,7 +3,6 @@ const API_URL = "https://expenseshare-0sjl.onrender.com/api";
 // Helper: handle auth errors
 const handleAuthError = (response) => {
   if (response.status === 403 || response.status === 401) {
-    console.error("Authentication failed - clearing invalid token");
     localStorage.removeItem("token");
     localStorage.removeItem("userId");
     window.location.href = "/login";
@@ -17,9 +16,6 @@ const getAuthHeaders = () => {
     "Content-Type": "application/json",
     ...(token && { Authorization: `Bearer ${token}` }),
   };
-  if (!token) {
-    console.warn("⚠️ No auth token found in localStorage");
-  }
   return headers;
 };
 

@@ -64,7 +64,6 @@ export default function DashboardPage({ currentUser, users }) {
         const settledData = await api.getSettledExpenses(currentUser);
         setSettledExpenses(settledData || []);
       } catch (settledError) {
-        console.warn("Failed to load settled expenses:", settledError);
         setSettledExpenses([]);
       }
 
@@ -83,10 +82,6 @@ export default function DashboardPage({ currentUser, users }) {
             );
             allExpenses.push(...expensesWithGroupName);
           } catch (expError) {
-            console.warn(
-              `Failed to load expenses for group ${group.id}:`,
-              expError
-            );
             // Continue loading other groups
           }
         }
