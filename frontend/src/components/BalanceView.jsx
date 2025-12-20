@@ -151,37 +151,138 @@ export default function BalanceView({ balances, onSettle }) {
 
   // Group balances
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {balances.length === 0 ? (
-        <div className="text-center py-6">
+        <div className="text-center py-8">
           <FaCheckCircle className="text-green-400 text-4xl mx-auto mb-2" />
           <p className="text-gray-300 text-sm">All settled up! 🎉</p>
         </div>
       ) : (
-        balances.map((balance, idx) => (
-          <motion.div
-            key={idx}
-            whileHover={{ scale: 1.02 }}
-            className="p-3 rounded-lg bg-white/5 border border-white/10"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-sm">
-                <FaUserCircle className="text-blue-400" />
-                <span className="text-white font-medium">
-                  {balance.fromUser.name}
-                </span>
-                <span className="text-gray-400">→</span>
-                <FaUserCircle className="text-green-400" />
-                <span className="text-white font-medium">
-                  {balance.toUser.name}
-                </span>
-              </div>
-              <span className="font-bold text-white">
-                ₹{balance.amount.toFixed(2)}
-              </span>
+        <>
+          {/* Table Header - Desktop Only */}
+          <div className="hidden lg:grid grid-cols-12 gap-4 px-4 py-3 rounded-lg bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 mb-3">
+            <div className="col-span-4 text-xs font-semibold text-blue-300 uppercase tracking-widest">
+              Payer
             </div>
-          </motion.div>
-        ))
+            <div className="col-span-1 flex items-center justify-center text-gray-400">
+              →
+            </div>
+            <div className="col-span-4 text-xs font-semibold text-green-300 uppercase tracking-widest">
+              Receiver
+            </div>
+            <div className="col-span-3 text-right text-xs font-semibold text-yellow-300 uppercase tracking-widest">
+              Amount
+            </div>
+          </div>
+
+          {/* Balance List */}
+          <div className="space-y-3">
+            {balances.map((balance, idx) => (
+              <motion.div
+                key={idx}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.05 }}
+                whileHover={{ scale: 1.02 }}
+                className="p-4 rounded-xl bg-gradient-to-r from-slate-800/40 via-slate-800/30 to-slate-800/40 border border-slate-700/50 hover:border-blue-500/50 shadow-lg hover:shadow-blue-500/20 transition-all duration-300"
+              >
+                {/* Desktop Layout */}
+                <div className="hidden lg:grid grid-cols-12 gap-4 items-center">
+                  {/* From User */}
+                  <div className="col-span-4 flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-blue-500/20 border border-blue-500/30">
+                      <FaUserCircle className="text-blue-400 text-lg" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-white font-semibold text-sm truncate">
+                        {balance.fromUser.name}
+                      </p>
+                      <p className="text-xs text-gray-400 truncate">
+                        {balance.fromUser.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Arrow */}
+                  <div className="col-span-1 flex justify-center">
+                    <span className="text-2xl text-gray-500">→</span>
+                  </div>
+
+                  {/* To User */}
+                  <div className="col-span-4 flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-green-500/20 border border-green-500/30">
+                      <FaUserCircle className="text-green-400 text-lg" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-white font-semibold text-sm truncate">
+                        {balance.toUser.name}
+                      </p>
+                      <p className="text-xs text-gray-400 truncate">
+                        {balance.toUser.email}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Amount */}
+                  <div className="col-span-3 text-right">
+                    <p className="text-xl font-bold text-yellow-400">
+                      ₹{balance.amount.toFixed(2)}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">Pending</p>
+                  </div>
+                </div>
+
+                {/* Mobile/Tablet Layout */}
+                <div className="lg:hidden space-y-3">
+                  {/* From Section */}
+                  <div className="flex items-center gap-3 pb-3 border-b border-slate-700/50">
+                    <div className="p-2 rounded-lg bg-blue-500/20 border border-blue-500/30">
+                      <FaUserCircle className="text-blue-400 text-lg" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-400 uppercase tracking-wider">
+                        Owes
+                      </p>
+                      <p className="text-white font-semibold">
+                        {balance.fromUser.name}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Arrow Mobile */}
+                  <div className="flex justify-center">
+                    <span className="text-gray-500">↓</span>
+                  </div>
+
+                  {/* To Section */}
+                  <div className="flex items-center gap-3 pb-3 border-b border-slate-700/50">
+                    <div className="p-2 rounded-lg bg-green-500/20 border border-green-500/30">
+                      <FaUserCircle className="text-green-400 text-lg" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-gray-400 uppercase tracking-wider">
+                        To
+                      </p>
+                      <p className="text-white font-semibold">
+                        {balance.toUser.name}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Amount Mobile */}
+                  <div className="flex items-center justify-between pt-2">
+                    <span className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+                      Amount
+                    </span>
+                    <span className="text-lg font-bold text-yellow-400">
+                      ₹{balance.amount.toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

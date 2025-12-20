@@ -390,7 +390,8 @@ export const getGroupBalances = async (groupId) => {
   });
   if (!response.ok) throw new Error("Failed to fetch group balances");
   const data = await response.json();
-  return transformGroupBalances(data);
+  // Data is already formatted by the backend as { fromUser, toUser, amount }
+  return data;
 };
 
 export const settleBalance = async (

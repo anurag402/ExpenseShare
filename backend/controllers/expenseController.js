@@ -17,15 +17,17 @@ export const createExpense = async (req, res) => {
     // Validate amount
     const amountValue = Number(amount);
     if (isNaN(amountValue) || amountValue <= 0) {
-      return res.status(400).json({ error: "Amount must be a positive number" });
+      return res
+        .status(400)
+        .json({ error: "Amount must be a positive number" });
     }
-    
+
     if (amountValue > 10000000) {
       return res.status(400).json({ error: "Amount is too large" });
     }
 
     // Validate description
-    if (typeof description !== 'string' || description.trim().length === 0) {
+    if (typeof description !== "string" || description.trim().length === 0) {
       return res.status(400).json({ error: "Description cannot be empty" });
     }
 
@@ -56,101 +58,142 @@ export const createExpense = async (req, res) => {
 
     if (splitType === "equal") {
       if (memberIds.length === 0) {
-        return res.status(400).json({ error: "Group must have at least one member" });
+        return res
+          .status(400)
+          .json({ error: "Group must have at least one member" });
       }
       const share = amountValue / memberIds.length;
       computedSplits = memberIds.map((userId) => ({ userId, amount: share }));
     } else if (splitType === "percentage") {
       if (!Array.isArray(splits) || splits.length === 0) {
-        return res.status(400).json({ error: "Splits array is required for percentage split" });
+        return res
+          .status(400)
+          .json({ error: "Splits array is required for percentage split" });
       }
-      
+
       // Validate all percentages and userIds
       for (const split of splits) {
         // Validate userId is a group member
         if (!memberIds.includes(split.userId?.toString())) {
-          return res.status(400).json({ error: "All split users must be group members" });
+          return res
+            .status(400)
+            .json({ error: "All split users must be group members" });
         }
-        
+
         const perc = Number(split.percentage || 0);
         if (isNaN(perc) || perc < 0) {
-          return res.status(400).json({ error: "Percentages must be non-negative numbers" });
+          return res
+            .status(400)
+            .json({ error: "Percentages must be non-negative numbers" });
         }
         if (perc > 100) {
-          return res.status(400).json({ error: "Individual percentage cannot exceed 100%" });
+          return res
+            .status(400)
+            .json({ error: "Individual percentage cannot exceed 100%" });
         }
       }
-      
+
       const totalPerc = splits.reduce(
         (sum, s) => sum + Number(s.percentage || 0),
         0
       );
-      
-      if (totalPerc > 100 + 0.01) { // Allow small floating point errors
-        return res.status(400).json({ 
-          error: `Total percentage (${totalPerc.toFixed(1)}%) exceeds 100%` 
+
+      if (totalPerc > 100 + 0.01) {
+        // Allow small floating point errors
+        return res.status(400).json({
+          error: `Total percentage (${totalPerc.toFixed(1)}%) exceeds 100%`,
         });
       }
-      
-      if (totalPerc < 100 - 0.01) { // Must equal 100%
-        return res.status(400).json({ 
-          error: `Total percentage (${totalPerc.toFixed(1)}%) is less than 100%. Total must equal 100%` 
+
+      if (totalPerc < 100 - 0.01) {
+        // Must equal 100%
+        return res.status(400).json({
+          error: `Total percentage (${totalPerc.toFixed(
+            1
+          )}%) is less than 100%. Total must equal 100%`,
         });
       }
-      
+
       if (totalPerc > 0) {
-        computedSplits = splits.map((s) => ({
-          userId: s.userId,
-          amount: (amountValue * Number(s.percentage || 0)) / 100,
-        })).filter((s) => s.amount > 0);
+        computedSplits = splits
+          .map((s) => ({
+            userId: s.userId,
+            amount: (amountValue * Number(s.percentage || 0)) / 100,
+          }))
+          .filter((s) => s.amount > 0);
       } else {
-        return res.status(400).json({ error: "Total percentage must be greater than 0" });
+        return res
+          .status(400)
+          .json({ error: "Total percentage must be greater than 0" });
       }
     } else if (splitType === "exact") {
       if (!Array.isArray(splits) || splits.length === 0) {
-        return res.status(400).json({ error: "Splits array is required for exact split" });
+        return res
+          .status(400)
+          .json({ error: "Splits array is required for exact split" });
       }
-      
+
       // Validate all split amounts and userIds
       for (const split of splits) {
         // Validate userId is a group member
         if (!memberIds.includes(split.userId?.toString())) {
-          return res.status(400).json({ error: "All split users must be group members" });
+          return res
+            .status(400)
+            .json({ error: "All split users must be group members" });
         }
-        
+
         const amt = Number(split.amount || 0);
         if (isNaN(amt) || amt < 0) {
-          return res.status(400).json({ error: "Split amounts must be non-negative numbers" });
+          return res
+            .status(400)
+            .json({ error: "Split amounts must be non-negative numbers" });
         }
       }
-      
-      const validSplits = splits.map((s) => ({
-        userId: s.userId,
-        amount: Number(s.amount || 0),
-      })).filter((s) => s.amount > 0);
-      
+
+      const validSplits = splits
+        .map((s) => ({
+          userId: s.userId,
+          amount: Number(s.amount || 0),
+        }))
+        .filter((s) => s.amount > 0);
+
       const totalSplit = validSplits.reduce((sum, s) => sum + s.amount, 0);
-      
-      if (totalSplit > amountValue + 0.01) { // Allow small floating point errors
-        return res.status(400).json({ 
-          error: `Total split (${totalSplit.toFixed(2)}) exceeds amount (${amountValue.toFixed(2)})` 
+
+      if (totalSplit > amountValue + 0.01) {
+        // Allow small floating point errors
+        return res.status(400).json({
+          error: `Total split (${totalSplit.toFixed(
+            2
+          )}) exceeds amount (${amountValue.toFixed(2)})`,
         });
       }
-      
-      if (totalSplit < amountValue - 0.01) { // Must equal amount
-        return res.status(400).json({ 
-          error: `Total split (${totalSplit.toFixed(2)}) is less than amount (${amountValue.toFixed(2)}). Total must equal the expense amount` 
+
+      if (totalSplit < amountValue - 0.01) {
+        // Must equal amount
+        return res.status(400).json({
+          error: `Total split (${totalSplit.toFixed(
+            2
+          )}) is less than amount (${amountValue.toFixed(
+            2
+          )}). Total must equal the expense amount`,
         });
       }
-      
+
       computedSplits = validSplits;
     } else {
-      return res.status(400).json({ error: "Invalid split type. Must be 'equal', 'exact', or 'percentage'" });
+      return res
+        .status(400)
+        .json({
+          error:
+            "Invalid split type. Must be 'equal', 'exact', or 'percentage'",
+        });
     }
-    
+
     // Ensure we have at least one split
     if (computedSplits.length === 0) {
-      return res.status(400).json({ error: "Expense must have at least one split" });
+      return res
+        .status(400)
+        .json({ error: "Expense must have at least one split" });
     }
 
     const expense = new Expense({
@@ -243,7 +286,7 @@ export const getExpenseById = async (req, res) => {
 
 export const deleteExpense = async (req, res) => {
   try {
-    const expense = await Expense.findByIdAndDelete(req.params.id);
+    const expense = await Expense.findById(req.params.id);
     if (!expense) {
       return res.status(404).json({ error: "Expense not found" });
     }
@@ -256,9 +299,18 @@ export const deleteExpense = async (req, res) => {
       return res.status(403).json({ error: "Not authorized for this group" });
     }
 
-    await Group.findByIdAndUpdate(expense.groupId, {
+    const groupId = expense.groupId;
+
+    // Delete the expense
+    await Expense.findByIdAndDelete(req.params.id);
+
+    // Remove expense reference from group
+    await Group.findByIdAndUpdate(groupId, {
       $pull: { expenses: req.params.id },
     });
+
+    // Recalculate group balances after deletion
+    await recalculateGroupBalances(groupId);
 
     res.json({ message: "Expense deleted successfully" });
   } catch (error) {

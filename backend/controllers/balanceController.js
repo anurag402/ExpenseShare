@@ -3,6 +3,7 @@ import { Expense } from "../models/ExpenseSchema.js";
 import { SettledExpense } from "../models/SettledExpenseSchema.js";
 import { SettlementRequest } from "../models/SettlementRequestSchema.js";
 import { Settlement } from "../models/SettlementSchema.js";
+import { Group } from "../models/GroupSchema.js";
 
 export const getUserBalances = async (req, res) => {
   try {
@@ -18,10 +19,54 @@ export const getUserBalances = async (req, res) => {
 
 export const getGroupBalances = async (req, res) => {
   try {
-    const balances = await Balance.find({ groupId: req.params.groupId })
+    const currentUserId = req.user?.id;
+    const groupId = req.params.groupId;
+
+    // Verify the user is a member of the group
+    const group = await Group.findById(groupId);
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
+    }
+
+    const isMember = group.members.some(
+      (memberId) => memberId.toString() === currentUserId.toString()
+    );
+    if (!isMember) {
+      return res
+        .status(403)
+        .json({ error: "Not authorized to view this group's balances" });
+    }
+
+    // All group members can see all balances in the group
+    const balances = await Balance.find({ groupId })
       .populate("userId", "name email")
       .populate("balances.otherUserId", "name email");
-    res.json(balances);
+
+    // Transform the data into a format the frontend expects
+    // Format: { fromUser, toUser, amount } where positive amount means fromUser owes toUser
+    const formattedBalances = [];
+    balances.forEach((balance) => {
+      balance.balances.forEach((b) => {
+        if (b.amount > 0) {
+          // Positive amount means userId owes otherUserId
+          formattedBalances.push({
+            fromUser: {
+              id: balance.userId._id.toString(),
+              name: balance.userId.name,
+              email: balance.userId.email,
+            },
+            toUser: {
+              id: b.otherUserId._id.toString(),
+              name: b.otherUserId.name,
+              email: b.otherUserId.email,
+            },
+            amount: b.amount,
+          });
+        }
+      });
+    });
+
+    res.json(formattedBalances);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -174,7 +219,7 @@ export const approveSettlementRequest = async (req, res) => {
 
     // Recalculate balances (which will now include the settlement)
     await recalculateGroupBalances(request.groupId?.toString());
-    
+
     const balances = await Balance.find({ groupId: request.groupId })
       .populate("userId", "name email")
       .populate("balances.otherUserId", "name email");
@@ -349,7 +394,7 @@ export async function recalculateGroupBalances(groupId) {
     const from = settlement.fromUserId.toString();
     const to = settlement.toUserId.toString();
     const amount = Number(settlement.amount);
-    
+
     // Settlement reduces debt from -> to
     addNet(from, to, -amount);
     addNet(to, from, amount);
@@ -357,20 +402,32 @@ export async function recalculateGroupBalances(groupId) {
 
   // Persist per-user documents
   const userIds = Array.from(netMap.keys());
-  for (const userId of userIds) {
-    const entries = Array.from(netMap.get(userId).entries())
-      .map(([otherUserId, amount]) => ({ otherUserId, amount }))
-      .filter(entry => Math.abs(entry.amount) >= 0.01); // Only keep non-zero balances
 
-    await Balance.findOneAndUpdate(
-      { userId, groupId },
-      { userId, groupId, balances: entries, updatedAt: new Date() },
-      { upsert: true, new: true, setDefaultsOnInsert: true }
-    );
+  if (userIds.length === 0) {
+    // No expenses left, delete all balances for this group
+    await Balance.deleteMany({ groupId });
+  } else {
+    for (const userId of userIds) {
+      const entries = Array.from(netMap.get(userId).entries())
+        .map(([otherUserId, amount]) => ({ otherUserId, amount }))
+        .filter((entry) => Math.abs(entry.amount) >= 0.01); // Only keep non-zero balances
+
+      if (entries.length === 0) {
+        // No non-zero balances for this user, delete their balance document
+        await Balance.deleteOne({ userId, groupId });
+      } else {
+        // Update with non-zero balances
+        await Balance.findOneAndUpdate(
+          { userId, groupId },
+          { userId, groupId, balances: entries, updatedAt: new Date() },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+      }
+    }
+
+    // Clean up old docs for this group that are no longer relevant
+    await Balance.deleteMany({ groupId, userId: { $nin: userIds } });
   }
-
-  // Clean up old docs for this group that are no longer relevant
-  await Balance.deleteMany({ groupId, userId: { $nin: userIds } });
 }
 
 // Utility: check if all balances for a group are settled and archive expenses
@@ -428,7 +485,7 @@ async function checkAndArchiveSettledExpenses(groupId, settledBy) {
       // Clear all balances
       await Balance.deleteMany({ groupId });
       console.log(`✅ Cleared all balance documents`);
-      
+
       // Clear all settlements for this group
       await Settlement.deleteMany({ groupId });
       console.log(`✅ Cleared all settlement records`);

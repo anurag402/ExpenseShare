@@ -77,7 +77,9 @@ export default function GroupDetailPage({
     try {
       const data = await api.getGroupExpenses(id);
       // Sort expenses by date (newest first)
-      const sortedExpenses = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      const sortedExpenses = data.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
       setExpenses(sortedExpenses);
     } catch (error) {
       console.error("Error loading expenses:", error);
@@ -146,9 +148,9 @@ export default function GroupDetailPage({
   };
 
   const toggleMemberSelection = (userId) => {
-    setSelectedMemberIds(prev => 
-      prev.includes(userId) 
-        ? prev.filter(id => id !== userId)
+    setSelectedMemberIds((prev) =>
+      prev.includes(userId)
+        ? prev.filter((id) => id !== userId)
         : [...prev, userId]
     );
   };
@@ -225,15 +227,15 @@ export default function GroupDetailPage({
 
   // Calculate net balance for current user only
   const userOwes = balances
-    .filter(b => b.fromUser.id === currentUser)
+    .filter((b) => b.fromUser.id === currentUser)
     .reduce((sum, b) => sum + Number(b.amount || 0), 0);
-  
+
   const userOwed = balances
-    .filter(b => b.toUser.id === currentUser)
+    .filter((b) => b.toUser.id === currentUser)
     .reduce((sum, b) => sum + Number(b.amount || 0), 0);
-  
+
   const netBalance = userOwed - userOwes;
-  
+
   const owesLabel =
     netBalance < 0 ? "You owe" : netBalance > 0 ? "You are owed" : "Settled";
   const netColor =
@@ -339,12 +341,12 @@ export default function GroupDetailPage({
                 Select Members to Add
               </h4>
               <p className="text-sm text-gray-400">
-                {selectedMemberIds.length > 0 
+                {selectedMemberIds.length > 0
                   ? `${selectedMemberIds.length} member(s) selected`
                   : "Click on users below to select them"}
               </p>
             </div>
-            
+
             {/* Search Input */}
             <div className="mb-4 relative">
               <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -356,49 +358,72 @@ export default function GroupDetailPage({
                 className="w-full pl-11 pr-4 py-3 rounded-lg bg-white/10 border border-white/20 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
               />
             </div>
-            
+
             {/* User List - Single Column */}
-            <div className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto overflow-x-visible px-2 mb-4 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <div
+              className="grid grid-cols-1 gap-3 max-h-[300px] overflow-y-auto overflow-x-visible px-2 mb-4 scrollbar-hide"
+              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+            >
               {availableUsers
-                .filter(user => 
-                  user.name.toLowerCase().includes(memberSearch.toLowerCase()) ||
-                  user.email.toLowerCase().includes(memberSearch.toLowerCase())
+                .filter(
+                  (user) =>
+                    user.name
+                      .toLowerCase()
+                      .includes(memberSearch.toLowerCase()) ||
+                    user.email
+                      .toLowerCase()
+                      .includes(memberSearch.toLowerCase())
                 )
                 .map((user) => {
-                const isSelected = selectedMemberIds.includes(user.id);
-                return (
-                  <motion.div
-                    key={user.id}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={() => toggleMemberSelection(user.id)}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                      isSelected
-                        ? 'bg-blue-500/20 border-blue-500/50 shadow-lg shadow-blue-500/20'
-                        : 'bg-white/5 border-white/10 hover:border-white/30'
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
-                        isSelected 
-                          ? 'bg-blue-500 border-blue-500' 
-                          : 'border-white/30'
-                      }`}>
-                        {isSelected && (
-                          <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                          </svg>
-                        )}
+                  const isSelected = selectedMemberIds.includes(user.id);
+                  return (
+                    <motion.div
+                      key={user.id}
+                      whileHover={{ scale: 1.01 }}
+                      whileTap={{ scale: 0.99 }}
+                      onClick={() => toggleMemberSelection(user.id)}
+                      className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        isSelected
+                          ? "bg-blue-500/20 border-blue-500/50 shadow-lg shadow-blue-500/20"
+                          : "bg-white/5 border-white/10 hover:border-white/30"
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                            isSelected
+                              ? "bg-blue-500 border-blue-500"
+                              : "border-white/30"
+                          }`}
+                        >
+                          {isSelected && (
+                            <svg
+                              className="w-3 h-3 text-white"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={3}
+                                d="M5 13l4 4L19 7"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-white font-semibold">
+                            {user.name}{" "}
+                            <span className="text-xs text-gray-400 font-normal">
+                              ({user.email})
+                            </span>
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <p className="text-white font-semibold">
-                          {user.name} <span className="text-xs text-gray-400 font-normal">({user.email})</span>
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
+                    </motion.div>
+                  );
+                })}
             </div>
 
             <div className="flex gap-3">
@@ -409,11 +434,14 @@ export default function GroupDetailPage({
                 disabled={selectedMemberIds.length === 0}
                 className={`flex-1 px-5 py-3 rounded-lg font-semibold transition-all ${
                   selectedMemberIds.length > 0
-                    ? 'bg-green-500/20 border border-green-500/30 text-green-300 hover:bg-green-500/30 hover:border-green-400/50'
-                    : 'bg-gray-500/10 border border-gray-500/20 text-gray-500 cursor-not-allowed'
+                    ? "bg-green-500/20 border border-green-500/30 text-green-300 hover:bg-green-500/30 hover:border-green-400/50"
+                    : "bg-gray-500/10 border border-gray-500/20 text-gray-500 cursor-not-allowed"
                 }`}
               >
-                Add {selectedMemberIds.length > 0 ? `(${selectedMemberIds.length})` : ''}
+                Add{" "}
+                {selectedMemberIds.length > 0
+                  ? `(${selectedMemberIds.length})`
+                  : ""}
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -501,7 +529,9 @@ export default function GroupDetailPage({
                   </span>
                   <div className="text-gray-200">
                     <p className="font-semibold">Select Payer</p>
-                    <p className="text-gray-400 text-[10px] mt-0.5">Who paid the expense</p>
+                    <p className="text-gray-400 text-[10px] mt-0.5">
+                      Who paid the expense
+                    </p>
                   </div>
                 </div>
                 <div className="rounded-lg bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-400/20 px-3 py-2.5 flex items-start gap-2">
@@ -510,7 +540,9 @@ export default function GroupDetailPage({
                   </span>
                   <div className="text-gray-200">
                     <p className="font-semibold">Enter Details</p>
-                    <p className="text-gray-400 text-[10px] mt-0.5">Amount & description</p>
+                    <p className="text-gray-400 text-[10px] mt-0.5">
+                      Amount & description
+                    </p>
                   </div>
                 </div>
                 <div className="rounded-lg bg-gradient-to-br from-pink-500/10 to-orange-500/10 border border-pink-400/20 px-3 py-2.5 flex items-start gap-2">
@@ -519,7 +551,9 @@ export default function GroupDetailPage({
                   </span>
                   <div className="text-gray-200">
                     <p className="font-semibold">Choose Split Type</p>
-                    <p className="text-gray-400 text-[10px] mt-0.5">Equal, exact, or percentage</p>
+                    <p className="text-gray-400 text-[10px] mt-0.5">
+                      Equal, exact, or percentage
+                    </p>
                   </div>
                 </div>
               </div>
@@ -555,29 +589,30 @@ export default function GroupDetailPage({
             )}
           </div>
           <div className="p-6 rounded-2xl backdrop-blur-md bg-white/10 border border-white/20 shadow-xl">
-            <h2 className="text-xl font-bold text-white mb-3">Balances</h2>
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h2 className="text-2xl font-bold text-white">Balances</h2>
+                <p className="text-sm text-gray-400 mt-1">
+                  Group transaction overview
+                </p>
+              </div>
+              {balances.length > 0 && (
+                <div className="px-3 py-1 rounded-full bg-blue-500/20 border border-blue-500/30">
+                  <span className="text-xs font-semibold text-blue-300">
+                    {balances.length} transactions
+                  </span>
+                </div>
+              )}
+            </div>
             {balances.length === 0 ? (
-              <div className="text-gray-300 text-sm py-4">
-                No balances yet. Add expenses to see splits.
+              <div className="text-center py-8">
+                <FaMoneyBillWave className="text-4xl text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-300 text-sm">
+                  No balances yet. Add expenses to see splits.
+                </p>
               </div>
             ) : (
-              <BalanceView 
-                balances={currentUser ? {
-                  owes: balances.filter(b => b.fromUser.id === currentUser).map(b => ({
-                    toUser: b.toUser,
-                    amount: b.amount,
-                    groupId: id,
-                    updatedAt: b.updatedAt
-                  })),
-                  owed: balances.filter(b => b.toUser.id === currentUser).map(b => ({
-                    fromUser: b.fromUser,
-                    amount: b.amount,
-                    groupId: id,
-                    updatedAt: b.updatedAt
-                  }))
-                } : balances} 
-                onSettle={handleSettle} 
-              />
+              <BalanceView balances={balances} onSettle={handleSettle} />
             )}
           </div>
         </motion.div>

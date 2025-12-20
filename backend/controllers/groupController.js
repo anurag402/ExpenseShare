@@ -1,5 +1,10 @@
 import { Group } from "../models/GroupSchema.js";
 import { User } from "../models/UserSchema.js";
+import { Expense } from "../models/ExpenseSchema.js";
+import { Balance } from "../models/BalanceSchema.js";
+import { SettlementRequest } from "../models/SettlementRequestSchema.js";
+import { Settlement } from "../models/SettlementSchema.js";
+import { SettledExpense } from "../models/SettledExpenseSchema.js";
 
 export const createGroup = async (req, res) => {
   try {
@@ -198,7 +203,16 @@ export const deleteGroup = async (req, res) => {
       return res.status(403).json({ error: "Only the creator can delete" });
     }
 
-    await Group.findByIdAndDelete(req.params.id);
+    // Cascade delete: remove all related data
+    await Promise.all([
+      Expense.deleteMany({ groupId: req.params.id }),
+      Balance.deleteMany({ groupId: req.params.id }),
+      SettlementRequest.deleteMany({ groupId: req.params.id }),
+      Settlement.deleteMany({ groupId: req.params.id }),
+      SettledExpense.deleteMany({ groupId: req.params.id }),
+      Group.findByIdAndDelete(req.params.id),
+    ]);
+
     res.json({ message: "Group deleted successfully" });
   } catch (error) {
     res.status(500).json({ error: error.message });
